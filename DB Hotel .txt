@@ -1,0 +1,63 @@
+DB Hotel - Query su singola tabella:
+
+1 - Seleziona tutti gli ospiti che sono stati identificati con la carta di identità:
+SELECT `name`, `lastname`, `document_type` FROM `ospiti` WHERE `document_type` = 'CI';
+Screenshot: DB Hotel - Query su singola tabella - 1.png
+
+2 - Seleziona tutti gli ospiti che sono nati dopo il 1988:
+SELECT `name`, `lastname`, `date_of_birth` FROM `ospiti` WHERE `date_of_birth` > '1988-01-01';
+Screenshot: DB Hotel - Query su singola tabella - 2.png
+
+3 - Seleziona tutti gli ospiti che hanno più di 20 anni (al momento dell’esecuzione della query):
+SELECT `name`, `lastname`, `date_of_birth` FROM `ospiti` WHERE `date_of_birth` < '2001-05-06';
+Screenshot: DB Hotel - Query su singola tabella - 3.png
+
+4 - Seleziona tutti gli ospiti il cui nome inizia con la D:
+SELECT `name`, `lastname` FROM `ospiti` WHERE `name` LIKE 'D%';
+Screenshot: DB Hotel - Query su singola tabella - 4.png
+
+5 - Calcola il totale incassato degli ordini accepted:
+SELECT SUM(price), `status` FROM `pagamenti` WHERE `status` = 'accepted';
+Screenshot: DB Hotel - Query su singola tabella - 5.png
+
+6 - Qual è il prezzo massimo pagato?:
+(1) SELECT MAX(price), `status` FROM `pagamenti` WHERE `status` = 'accepted'
+Screenshot: DB Hotel - Query su singola tabella - 6 (1).png
+(2) SELECT MAX(price) FROM `pagamenti`;
+Screenshot: DB Hotel - Query su singola tabella - 6 (2).png
+
+7 - Seleziona gli ospiti riconosciuti con patente e nati nel 1975:
+SELECT `name`, `lastname`, `date_of_birth`, `document_type` FROM `ospiti` WHERE `document_type` = 'Driver License' AND `date_of_birth` LIKE '1975%';
+Screenshot: DB Hotel - Query su singola tabella - 7.png
+
+8 - Quanti paganti sono anche ospiti?:
+SELECT * FROM `paganti` WHERE `ospite_id` <> 'NULL';
+Screenshot: DB Hotel - Query su singola tabella - 8.png
+
+9 - Quanti posti letto ha l’hotel in totale?:
+SELECT SUM(beds) FROM `stanze`:
+Screenshot: DB Hotel - Query su singola tabella - 9.png
+
+
+DB Hotel - Query con GROUP BY:
+
+1 - Conta gli ospiti raggruppandoli per anno di nascita:
+SELECT COUNT(YEAR(date_of_birth)), YEAR(date_of_birth) FROM `ospiti` GROUP BY YEAR(date_of_birth);
+Screenshot: DB Hotel - Query con GROUP BY - 1.png
+
+2 - Somma i prezzi dei pagamenti raggruppandoli per status:
+SELECT SUM(price), `status` FROM `pagamenti` GROUP BY `status`;
+Screenshot: DB Hotel - Query con GROUP BY - 2.png
+
+3 - Conta quante volte è stata prenotata ogni stanza:
+SELECT COUNT(stanza_id), `stanza_id` FROM `prenotazioni` GROUP BY `stanza_id`;
+Screenshot: DB Hotel - Query con GROUP BY - 3.png
+
+4 - Fai una analisi per vedere se ci sono ore in cui le prenotazioni sono più frequenti:
+SELECT COUNT(HOUR(created_at)), HOUR(created_at) FROM `prenotazioni` GROUP BY HOUR(created_at);
+Screenshot: DB Hotel - Query con GROUP BY - 4.png
+
+5 - Quante prenotazioni ha fatto l’ospite che ha fatto più prenotazioni? (quante, non chi!)
+SELECT COUNT(ospite_id) FROM `prenotazioni_has_ospiti` GROUP BY `ospite_id` ORDER BY COUNT(ospite_id) DESC LIMIT 1;
+Screenshot: DB Hotel - Query con GROUP BY - 5.png
+
