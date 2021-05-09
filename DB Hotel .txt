@@ -5,11 +5,11 @@ SELECT `name`, `lastname`, `document_type` FROM `ospiti` WHERE `document_type` =
 Screenshot: DB Hotel - Query su singola tabella - 1.png
 
 2 - Seleziona tutti gli ospiti che sono nati dopo il 1988:
-SELECT `name`, `lastname`, `date_of_birth` FROM `ospiti` WHERE `date_of_birth` > '1988-01-01';
+SELECT `name`, `lastname`, `date_of_birth` FROM `ospiti` WHERE YEAR(`date_of_birth`) > '1988';
 Screenshot: DB Hotel - Query su singola tabella - 2.png
 
 3 - Seleziona tutti gli ospiti che hanno più di 20 anni (al momento dell’esecuzione della query):
-SELECT `name`, `lastname`, `date_of_birth` FROM `ospiti` WHERE `date_of_birth` < '2001-05-06';
+SELECT `name`, `lastname`, `date_of_birth` FROM `ospiti` WHERE `date_of_birth` < NOW() - INTERVAL 20 YEAR;
 Screenshot: DB Hotel - Query su singola tabella - 3.png
 
 4 - Seleziona tutti gli ospiti il cui nome inizia con la D:
@@ -27,7 +27,7 @@ Screenshot: DB Hotel - Query su singola tabella - 6 (1).png
 Screenshot: DB Hotel - Query su singola tabella - 6 (2).png
 
 7 - Seleziona gli ospiti riconosciuti con patente e nati nel 1975:
-SELECT `name`, `lastname`, `date_of_birth`, `document_type` FROM `ospiti` WHERE `document_type` = 'Driver License' AND `date_of_birth` LIKE '1975%';
+SELECT `name`, `lastname`, YEAR(`date_of_birth`), `document_type` FROM `ospiti` WHERE `document_type` = 'Driver License' AND YEAR(`date_of_birth`) = '1975';
 Screenshot: DB Hotel - Query su singola tabella - 7.png
 
 8 - Quanti paganti sono anche ospiti?:
@@ -42,7 +42,7 @@ Screenshot: DB Hotel - Query su singola tabella - 9.png
 DB Hotel - Query con GROUP BY:
 
 1 - Conta gli ospiti raggruppandoli per anno di nascita:
-SELECT COUNT(YEAR(date_of_birth)), YEAR(date_of_birth) FROM `ospiti` GROUP BY YEAR(date_of_birth);
+SELECT COUNT(id), YEAR(date_of_birth) FROM `ospiti` GROUP BY YEAR(date_of_birth);
 Screenshot: DB Hotel - Query con GROUP BY - 1.png
 
 2 - Somma i prezzi dei pagamenti raggruppandoli per status:
@@ -50,7 +50,7 @@ SELECT SUM(price), `status` FROM `pagamenti` GROUP BY `status`;
 Screenshot: DB Hotel - Query con GROUP BY - 2.png
 
 3 - Conta quante volte è stata prenotata ogni stanza:
-SELECT COUNT(stanza_id), `stanza_id` FROM `prenotazioni` GROUP BY `stanza_id`;
+SELECT COUNT(id), `stanza_id` FROM `prenotazioni` GROUP BY `stanza_id`;
 Screenshot: DB Hotel - Query con GROUP BY - 3.png
 
 4 - Fai una analisi per vedere se ci sono ore in cui le prenotazioni sono più frequenti:
@@ -58,6 +58,33 @@ SELECT COUNT(HOUR(created_at)), HOUR(created_at) FROM `prenotazioni` GROUP BY HO
 Screenshot: DB Hotel - Query con GROUP BY - 4.png
 
 5 - Quante prenotazioni ha fatto l’ospite che ha fatto più prenotazioni? (quante, non chi!)
-SELECT COUNT(ospite_id) FROM `prenotazioni_has_ospiti` GROUP BY `ospite_id` ORDER BY COUNT(ospite_id) DESC LIMIT 1;
+SELECT COUNT(id) FROM `prenotazioni_has_ospiti` GROUP BY `ospite_id` ORDER BY COUNT(ospite_id) DESC LIMIT 1;
 Screenshot: DB Hotel - Query con GROUP BY - 5.png
 
+
+DB Hotel - Query con JOIN:
+
+
+1 - Come si chiamano gli ospiti che hanno fatto più di due prenotazioni?
+SELECT `ospiti`.`name`, `ospiti`.`lastname`, COUNT(`prenotazioni_has_ospiti`.`id`) AS "booking" FROM `prenotazioni_has_ospiti` INNER JOIN `ospiti` ON `prenotazioni_has_ospiti`.`ospite_id` = `ospiti`.`id` GROUP BY `ospiti`.`id` HAVING `booking` > 2; 
+Screenshot: DB Hotel - Query con JOIN - 1.png
+
+2 - Stampare tutti gli ospiti per ogni prenotazione
+SELECT DISTINCT `ospiti`.* FROM `prenotazioni_has_ospiti` INNER JOIN `ospiti` ON `ospiti`.`id` = `prenotazioni_has_ospiti`.`ospite_id`
+Screenshot: DB Hotel - Query con JOIN - 2.png
+
+3 - Stampare Nome, Cognome, Prezzo e Pagante per tutte le prenotazioni fatte a Maggio 2018
+SELECT `paganti`.`name`, `paganti`.`lastname`,`pagamenti`.`price`, `pagamenti`.`status`, `prenotazioni`.`created_at` FROM `pagamenti` INNER JOIN `paganti` ON `pagamenti`.`pagante_id` = `paganti`.`id` AND `pagamenti`.`status` = 'accepted' INNER JOIN `prenotazioni` ON `pagamenti`.`prenotazione_id` = `prenotazioni`.`id` WHERE YEAR(`prenotazioni`.`created_at`) = 2018 AND MONTH(`prenotazioni`.`created_at`) = 5;
+Screenshot: DB Hotel - Query con JOIN - 3.png
+
+4 - Fai la somma di tutti i prezzi delle prenotazioni per le stanze del primo piano
+SELECT SUM(`pagamenti`.`price`) AS 'payment sum', `stanze`.`floor` FROM `prenotazioni` INNER JOIN `stanze` ON `prenotazioni`.`stanza_id` = `stanze`.`id` INNER JOIN `pagamenti` ON `pagamenti`.`prenotazione_id`= `prenotazioni`.`id` WHERE `stanze`.`floor` = "1";
+Screenshot: DB Hotel - Query con JOIN - 4.png
+
+5 - Prendi i dati di fatturazione per la prenotazione con id=7
+SELECT `paganti`.* , `pagamenti`.`status` FROM `prenotazioni` INNER JOIN `pagamenti` ON `prenotazioni`.`id` = `pagamenti`.`prenotazione_id` INNER JOIN `paganti` ON `pagamenti`.`pagante_id` = `paganti`.`id` WHERE `prenotazioni`.`id` = 7;
+Screenshot: DB Hotel - Query con JOIN - 5.png
+
+6 - Le stanze sono state tutte prenotate almeno una volta? (Visualizzare le stanze non ancora prenotate)
+SELECT `stanze`.`room_number`, COUNT(`prenotazioni`.`stanza_id`) AS "n_of_booking" FROM `prenotazioni` RIGHT JOIN `stanze` ON `prenotazioni`.`stanza_id` = `stanze`.`id` GROUP BY `stanze`.`id` HAVING `n_of_booking` = 0;
+Screenshot: DB Hotel - Query con JOIN - 6.png
